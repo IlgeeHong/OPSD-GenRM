@@ -9,7 +9,7 @@ For each preference pair, the policy judges which of two responses is better. Th
 ## Installation
 
 ```bash
-git clone <this-repo> OPSD-GenRM
+git clone https://github.com/IlgeeHong/OPSD-GenRM.git
 cd OPSD-GenRM
 pip install -r requirements.txt -r requirements-cuda.txt
 pip install -e .
