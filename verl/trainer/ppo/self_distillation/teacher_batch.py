@@ -245,7 +245,7 @@ def build_teacher_batch(
     prompt_template_key = getattr(self_distillation_cfg, "prompt_template", None)
     student_user_suffix = None
     if prompt_template_key:
-        from data.prompt_templates import get_prompt_template
+        from verl.utils.reward_score.feedback.prompt_templates import get_prompt_template
         _tmpl = get_prompt_template(prompt_template_key)
         student_user_suffix = _tmpl.student_user_msg_suffix
 

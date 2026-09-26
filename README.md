@@ -82,6 +82,7 @@ All self-distillation code paths are gated behind `actor_rollout_ref.actor.self_
 | `verl/trainer/ppo/self_distillation/reward.py` | `sd` advantage estimator, used only with `policy_loss.loss_mode=vanilla`. |
 | `verl/utils/kernel/topk_logprobs.py` | Fused Triton kernel for top-k log-probabilities without materializing the full log-softmax. |
 | `verl/utils/reward_score/feedback/` | Pairwise verdict reward (`<verdict>A\|B</verdict>`) that also returns the annotator feedback or rubric for the teacher. |
+| `verl/utils/reward_score/feedback/prompt_templates.py` | Pairwise judge prompt templates, shared by the preprocessing scripts, the per-epoch A/B swap, and the teacher prompt builder. |
 | `verl/trainer/ppo/token_mask.py` | Teacher-free entropy token mask for GRPO-style losses. |
 | `verl/trainer/config/opsd_genrm.yaml` | Hydra config with the teacher prompt template for the rationale launchers. |
 | `verl/trainer/config/opsd_genrm_rubric.yaml` | Same, with a rubric-oriented teacher instruction, for the rubric launchers. |

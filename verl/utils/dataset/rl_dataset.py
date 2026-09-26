@@ -40,22 +40,22 @@ logger = logging.getLogger(__name__)
 def _apply_epoch_order_swap(row_dict: dict) -> dict:
     """Return a row with Assistant A/B swapped for per-epoch order augmentation.
 
-    Requires raw fields (resp_a_raw, resp_b_raw, context_raw, prompt_template_key)
-    written by the updated preprocessing. Toggles reward_model.ground_truth and
+    Requires the raw fields (resp_a_raw, resp_b_raw, context_raw, prompt_template_key)
+    written by data/preprocess_helpsteer3_dedup.py. Toggles reward_model.ground_truth and
     extra_info.position_flipped so downstream scorers stay in sync.
     """
     extra = row_dict.get("extra_info") or {}
     if "resp_a_raw" not in extra:
         raise RuntimeError(
             "swap_order_per_epoch=true but extra_info lacks resp_a_raw; "
-            "re-run the updated preprocess_helpsteer3.py to emit raw fields."
+            "re-run data/preprocess_helpsteer3_dedup.py to emit the raw fields."
         )
 
     row_dict = dict(row_dict)
     extra = dict(extra)
     rm = dict(row_dict.get("reward_model") or {})
 
-    from data.prompt_templates import get_prompt_template
+    from verl.utils.reward_score.feedback.prompt_templates import get_prompt_template
 
     tmpl = get_prompt_template(extra["prompt_template_key"])
     user_msg = tmpl.student_user_msg.format(
