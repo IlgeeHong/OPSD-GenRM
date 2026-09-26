@@ -1,8 +1,14 @@
 # OPSD-GenRM
 
-OPSD-GenRM trains generative reward models (pairwise LLM judges) with **on-policy self-distillation (OPSD)**, built on [verl](https://github.com/volcengine/verl) `release/v0.7.1`.
+OPSD-GenRM trains generative reward models (pairwise LLM judges) with **on-policy self-distillation (OPSD)**. The code is built on [verl](https://github.com/volcengine/verl) (`release/v0.7.1`) and [SDPO](https://github.com/lasgroup/SDPO).
 
 For each preference pair, the policy judges which of two responses is better. The same model then acts as a **teacher** on an enriched prompt that additionally contains privileged information — the annotator's rationale or a task rubric — and scores the student's own response under that prompt. The **student** (the policy on the original prompt) is trained to match the teacher's token distribution with a top-k KL loss. The teacher is an exponential moving average (EMA) of the student. Optionally, the loss is restricted to the 30% of tokens with the lowest entropy difference ΔH = H_student − H_teacher, i.e. where the teacher is most uncertain relative to the student.
+
+---
+
+## Trained models
+
+The trained models are available at [huggingface.co/opsd-genrm/models](https://huggingface.co/opsd-genrm/models).
 
 ---
 
@@ -104,33 +110,23 @@ All self-distillation code paths are gated behind `actor_rollout_ref.actor.self_
 
 ---
 
-## Configuration reference
-
-Self-distillation options live under `actor_rollout_ref.actor.self_distillation` (`verl/workers/config/actor.py::SelfDistillationConfig`). The loss is selected with `actor_rollout_ref.actor.policy_loss.loss_mode=full_logit_kl`.
-
-| Field | Default | Meaning |
-|---|---|---|
-| `enable` | `false` | Enables the teacher batch, teacher forward pass, and EMA teacher update. |
-| `distillation_topk` | `100` | Number of teacher top-k tokens used in the KL. |
-| `distillation_add_tail` | `true` | Adds a bucket for the remaining probability mass instead of renormalizing the top-k. |
-| `alpha` | `0.5` | KL direction: `0` forward KL(teacher ‖ student), `1` reverse KL(student ‖ teacher), in between a mixture. |
-| `teacher_regularization` | `ema` | Teacher type; `ema` (EMA of the student) is the supported setting. |
-| `teacher_update_rate` | `0.05` | EMA rate per step. |
-| `is_clip` | `2.0` | Upper clip on the importance ratio between the current and rollout policies. |
-| `include_environment_feedback` / `include_solution` / `include_answer` | `true` / `true` / `false` | Which privileged information is added to the teacher prompt. |
-| `reprompt_template` / `feedback_template` / `solution_template` / `answer_template` | — | Templates for the teacher prompt. |
-| `max_reprompt_len` | `10240` | Maximum teacher prompt length. |
-| `token_mask_mode` | `none` | `none`, `entropy_diff_mask` (keep the lowest ΔH = H_student − H_teacher), or `reverse_entropy_diff_mask` (keep the highest ΔH). |
-| `token_mask_top_pct` | `70.0` | The mask keeps (100 − `token_mask_top_pct`)% of each sequence's tokens: `70` keeps 30%. |
-
----
-
 ## Citation and attribution
 
-This work builds on verl. If you use this code, please also cite:
+This code builds on [verl](https://github.com/volcengine/verl) and [SDPO](https://github.com/lasgroup/SDPO). If you use it, please also cite:
 
 > *HybridFlow: A Flexible and Efficient RLHF Framework.* Sheng et al., EuroSys 2025. [arXiv:2409.19256](https://arxiv.org/abs/2409.19256)
 
+> *Reinforcement Learning via Self-Distillation.* Hübotter et al., 2026. [arXiv:2601.20802](https://arxiv.org/abs/2601.20802)
+
+```bibtex
+@article{hubotter2026reinforcement,
+  title = {Reinforcement Learning via Self-Distillation},
+  author = {H{\"u}botter, Jonas and L{\"u}beck, Frederike and Behric, Lejs Deen and Baumann, Anton and Bagatella, Marco and Marta, Daniel and Hakimi, Ido and Shenfeld, Idan and Kleine Buening, Thomas and Guestrin, Carlos and Krause, Andreas},
+  year = {2026},
+  journal = {arXiv preprint arXiv:2601.20802},
+}
+```
+
 ## License
 
-Apache License 2.0, matching verl. Source files carry verl's Apache 2.0 header (© ByteDance Ltd. and/or its affiliates). See `LICENSE` and `Notice.txt`.
+Apache License 2.0, matching verl and SDPO. Source files carry verl's Apache 2.0 header (© ByteDance Ltd. and/or its affiliates). See `LICENSE` and `Notice.txt`.

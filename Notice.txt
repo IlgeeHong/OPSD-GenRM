@@ -1,1 +1,3 @@
 Copyright 2023-2024 Bytedance Ltd. and/or its affiliates 
+Portions of the self-distillation code are derived from SDPO (https://github.com/lasgroup/SDPO),
+licensed under the Apache License, Version 2.0.
