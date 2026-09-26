@@ -118,15 +118,6 @@ This code builds on [verl](https://github.com/volcengine/verl) and [SDPO](https:
 
 > *Reinforcement Learning via Self-Distillation.* Hübotter et al., 2026. [arXiv:2601.20802](https://arxiv.org/abs/2601.20802)
 
-```bibtex
-@article{hubotter2026reinforcement,
-  title = {Reinforcement Learning via Self-Distillation},
-  author = {H{\"u}botter, Jonas and L{\"u}beck, Frederike and Behric, Lejs Deen and Baumann, Anton and Bagatella, Marco and Marta, Daniel and Hakimi, Ido and Shenfeld, Idan and Kleine Buening, Thomas and Guestrin, Carlos and Krause, Andreas},
-  year = {2026},
-  journal = {arXiv preprint arXiv:2601.20802},
-}
-```
-
 ## License
 
 Apache License 2.0, matching verl and SDPO. Source files carry verl's Apache 2.0 header (© ByteDance Ltd. and/or its affiliates). See `LICENSE` and `Notice.txt`.
