@@ -36,7 +36,7 @@ cp opsd_genrm_recipes/credentials.env.example opsd_genrm_recipes/credentials.env
 | Evaluation | [RM-Bench](https://huggingface.co/datasets/THU-KEG/RM-Bench) | `data/preprocess_rmbench.py` |
 | Evaluation | [RewardBench 2](https://huggingface.co/datasets/allenai/reward-bench-2) | `data/preprocess_rewardbench2.py` |
 
-The launchers run these scripts automatically. `--feedback_mode` selects the teacher's privileged information: `reasoning` (annotator rationale) or `rubric`.
+The launchers run these scripts automatically. `--feedback_mode` selects the teacher's privileged information: `reasoning` (annotator rationale) or `rubric`. `--prompt_template` selects the judge instruction: `pair_rm` for the rationale runs and the baseline, `pair_rm_rubric` (the judge first derives a rubric) for the rubric runs. The teacher prompt uses the same instruction as the student, so the two differ only by the feedback. Each template's data is written to `datasets/<template>/`.
 
 ---
 
@@ -82,10 +82,10 @@ All self-distillation code paths are gated behind `actor_rollout_ref.actor.self_
 | `verl/trainer/ppo/self_distillation/reward.py` | `sd` advantage estimator, used only with `policy_loss.loss_mode=vanilla`. |
 | `verl/utils/kernel/topk_logprobs.py` | Fused Triton kernel for top-k log-probabilities without materializing the full log-softmax. |
 | `verl/utils/reward_score/feedback/` | Pairwise verdict reward (`<verdict>A\|B</verdict>`) that also returns the annotator feedback or rubric for the teacher. |
-| `verl/utils/reward_score/feedback/prompt_templates.py` | Pairwise judge prompt templates, shared by the preprocessing scripts, the per-epoch A/B swap, and the teacher prompt builder. |
+| `verl/utils/reward_score/feedback/prompt_templates.py` | Pairwise judge prompt templates (`pair_rm`, `pair_rm_rubric`), shared by the preprocessing scripts, the per-epoch A/B swap, and the teacher prompt builder. |
 | `verl/trainer/ppo/token_mask.py` | Teacher-free entropy token mask for GRPO-style losses. |
 | `verl/trainer/config/opsd_genrm.yaml` | Hydra config with the teacher prompt template for the rationale launchers. |
-| `verl/trainer/config/opsd_genrm_rubric.yaml` | Same, with a rubric-oriented teacher instruction, for the rubric launchers. |
+| `verl/trainer/config/opsd_genrm_rubric.yaml` | Same for the rubric launchers, matching the `pair_rm_rubric` student instruction. |
 | `tests/trainer/ppo/self_distillation/test_sd_loss.py` | Unit tests for the loss, token mask, advantage estimator, and teacher updates. |
 
 ### Changes to verl files

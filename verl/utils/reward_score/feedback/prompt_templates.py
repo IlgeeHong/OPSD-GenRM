@@ -67,6 +67,19 @@ PAIR_RM_STUDENT_SUFFIX = (
     "(A or B only) in <verdict>...</verdict>."
 )
 
+# Rubric variant: derive a task-specific rubric first, then compare against it.
+# Must match the closing instruction in verl/trainer/config/opsd_genrm_rubric.yaml,
+# so that student and teacher prompts differ only by the rubric feedback.
+PAIR_RM_RUBRIC_STUDENT_SUFFIX = (
+    "\n\nIdentify the rubric that matters most for this specific task: the hard requirements the "
+    "response must satisfy, ranked by importance, and the discriminative criteria that most decisively "
+    "separate a better response from a worse one, ranked most decisive first \u2014 stating for each what "
+    "makes a response better versus worse. Then evaluate and compare the two assistant responses step by "
+    "step against that rubric. When correctness matters, solve the problem yourself and check each response "
+    "for any errors. After your analysis, determine which response is better overall and provide your final "
+    "verdict (A or B only) in <verdict>...</verdict>."
+)
+
 # ---------------------------------------------------------------------------
 # PromptTemplate dataclass and lookup
 # ---------------------------------------------------------------------------
@@ -84,6 +97,10 @@ PROMPT_TEMPLATES: dict[str, PromptTemplate] = {
     "pair_rm": PromptTemplate(
         student_user_msg=PAIR_RM_USER_MSG + PAIR_RM_STUDENT_SUFFIX,
         student_user_msg_suffix=PAIR_RM_STUDENT_SUFFIX,
+    ),
+    "pair_rm_rubric": PromptTemplate(
+        student_user_msg=PAIR_RM_USER_MSG + PAIR_RM_RUBRIC_STUDENT_SUFFIX,
+        student_user_msg_suffix=PAIR_RM_RUBRIC_STUDENT_SUFFIX,
     ),
 }
 
