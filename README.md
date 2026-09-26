@@ -112,7 +112,7 @@ All self-distillation code paths are gated behind `actor_rollout_ref.actor.self_
 
 ## Citation and attribution
 
-This code builds on [verl](https://github.com/volcengine/verl) and [SDPO](https://github.com/lasgroup/SDPO). If you use it, please also cite:
+This code builds on [verl](https://github.com/volcengine/verl) and [SDPO](https://github.com/lasgroup/SDPO).
 
 > *HybridFlow: A Flexible and Efficient RLHF Framework.* Sheng et al., EuroSys 2025. [arXiv:2409.19256](https://arxiv.org/abs/2409.19256)
 
