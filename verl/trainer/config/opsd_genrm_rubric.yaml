@@ -1,0 +1,20 @@
+defaults:
+  - ppo_trainer
+  - _self_
+
+data:
+  apply_chat_template_kwargs: {"enable_thinking": false}
+
+trainer:
+  logger: ["console", "wandb"]
+
+actor_rollout_ref:
+  actor:
+    self_distillation:
+      # Teacher prompt for rubric feedback: the teacher is asked to derive a rubric
+      # before comparing the responses. {solution} is empty unless include_solution=True.
+      reprompt_template: |-
+        {prompt}{solution}{feedback}
+
+        Identify the rubric that matters most for this specific task: the hard requirements the response must satisfy, ranked by importance, and the discriminative criteria that most decisively separate a better response from a worse one, ranked most decisive first — stating for each what makes a response better versus worse. Then evaluate and compare the two assistant responses step by step against that rubric. When correctness matters, solve the problem yourself and check each response for any errors. After your analysis, determine which response is better overall and provide your final verdict (A or B only) in <verdict>...</verdict>.
+      feedback_template: "\n\n{feedback_raw}"
