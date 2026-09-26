@@ -13,8 +13,9 @@ import argparse
 
 import datasets
 
+from verl.utils.reward_score.feedback.prompt_templates import PROMPT_TEMPLATES, get_prompt_template
+
 from common import format_context, format_response
-from prompt_templates import get_prompt_template, PROMPT_TEMPLATES
 
 
 def make_map_fn(split, include_format=False):
