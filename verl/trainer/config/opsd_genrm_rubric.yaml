@@ -11,8 +11,10 @@ trainer:
 actor_rollout_ref:
   actor:
     self_distillation:
-      # Teacher prompt for rubric feedback: the teacher is asked to derive a rubric
-      # before comparing the responses. {solution} is empty unless include_solution=True.
+      # Teacher prompt for rubric feedback. The closing instruction must match the
+      # student's pair_rm_rubric template (prompt_templates.py), so that teacher and
+      # student prompts differ only by the rubric. {solution} is empty unless
+      # include_solution=True.
       reprompt_template: |-
         {prompt}{solution}{feedback}
 

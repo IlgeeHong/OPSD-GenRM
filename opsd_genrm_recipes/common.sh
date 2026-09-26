@@ -67,21 +67,23 @@ opsd_load_credentials() {
 # -----------------------------------------------------------------------------
 
 # Builds the HelpSteer3 training set and the RM-Bench and RewardBench 2
-# evaluation sets. Sets TRAIN_DATA_DIR and VAL_FILES.
-#   $1: prompt template (e.g. pair_rm)
+# evaluation sets under ${DATA_ROOT}/<prompt template>/, since the rendered
+# prompts depend on the template. Sets TRAIN_DATA_DIR and VAL_FILES.
+#   $1: prompt template (pair_rm | pair_rm_rubric)
 #   $2: teacher feedback mode (reasoning | rubric | none)
 opsd_preprocess() {
     local prompt_template="$1"
     local feedback_mode="$2"
+    local data_dir="${DATA_ROOT}/${prompt_template}"
 
-    TRAIN_DATA_DIR="${DATA_ROOT}/helpsteer3_dedup_${feedback_mode}"
-    VAL_FILES="['${TRAIN_DATA_DIR}/test.parquet','${DATA_ROOT}/rmbench/test.parquet','${DATA_ROOT}/rewardbench2/test.parquet']"
+    TRAIN_DATA_DIR="${data_dir}/helpsteer3_dedup_${feedback_mode}"
+    VAL_FILES="['${TRAIN_DATA_DIR}/test.parquet','${data_dir}/rmbench/test.parquet','${data_dir}/rewardbench2/test.parquet']"
 
     if [[ "${SKIP_PREPROCESS:-0}" == "1" || "$DRY_RUN" == true ]]; then
         return 0
     fi
 
-    echo "Preprocessing data into ${DATA_ROOT} ..."
+    echo "Preprocessing data into ${data_dir} ..."
     (
         set -e
         cd "$REPO_ROOT"
@@ -92,11 +94,11 @@ opsd_preprocess() {
             --include_multiturn \
             --include_format
         python data/preprocess_rmbench.py \
-            --local_dir "${DATA_ROOT}/rmbench" \
+            --local_dir "${data_dir}/rmbench" \
             --prompt_template "$prompt_template" \
             --include_format
         python data/preprocess_rewardbench2.py \
-            --local_dir "${DATA_ROOT}/rewardbench2" \
+            --local_dir "${data_dir}/rewardbench2" \
             --prompt_template "$prompt_template" \
             --include_format
     ) || { echo "ERROR: data preprocessing failed." >&2; exit 1; }
