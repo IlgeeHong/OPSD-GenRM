@@ -1,0 +1,22 @@
+defaults:
+  - ppo_trainer
+  - _self_
+
+data:
+  apply_chat_template_kwargs: {"enable_thinking": false}
+
+trainer:
+  logger: ["console", "wandb"]
+
+actor_rollout_ref:
+  actor:
+    self_distillation:
+      # Teacher prompt for annotator-rationale feedback (rubric runs use opsd_genrm_rubric.yaml).
+      # To also use include_solution / include_answer, add {solution} / {answer}
+      # placeholders to reprompt_template.
+      reprompt_template: |-
+        {prompt}{feedback}
+
+        Identify the quality dimensions that matter most for this specific task, then evaluate and compare the two assistant responses step by step across those dimensions. When correctness matters, solve the problem yourself and check each response for any errors. After your analysis, determine which response is better overall and provide your final verdict (A or B only) in <verdict>...</verdict>.
+      feedback_template: "\n\n{feedback_raw}"
+
