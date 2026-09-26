@@ -515,7 +515,6 @@ class RayPPOTrainer:
         sample_scores = []
         sample_turns = []
         sample_uids = []
-        already_print_data_sources = {}
 
         for test_data in self.val_dataloader:
             test_batch = DataProto.from_single_dict(test_data)
