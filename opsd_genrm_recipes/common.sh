@@ -137,7 +137,13 @@ opsd_train() {
 # format under ${CKPT_DIR}/hf_step_<N>. On multi-node runs without a shared
 # filesystem, shards are first collected from WORKERS onto this node.
 opsd_merge_checkpoints() {
-    if [[ "$DRY_RUN" == true || "${TRAIN_EXIT:-1}" -ne 0 || "${SKIP_MERGE:-0}" == "1" ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+        return 0
+    fi
+    if [[ "${TRAIN_EXIT:-1}" -ne 0 ]]; then
+        return "${TRAIN_EXIT:-1}"
+    fi
+    if [[ "${SKIP_MERGE:-0}" == "1" ]]; then
         return 0
     fi
 

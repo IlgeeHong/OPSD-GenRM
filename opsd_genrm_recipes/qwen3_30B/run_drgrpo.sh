@@ -17,7 +17,7 @@ SEED=42
 # Optimization
 TRAIN_BATCH_SIZE=256
 EPOCH=4
-LR=5e-7
+LR=2e-6
 LOSS_AGG_MODE=seq-mean-token-sum-norm
 
 # Rollout

@@ -1,8 +1,8 @@
 # OPSD-GenRM
 
-OPSD-GenRM trains generative reward models (pairwise LLM judges) with **on-policy self-distillation (OPSD)**. The code is built on [verl](https://github.com/volcengine/verl) (`release/v0.7.1`) and [SDPO](https://github.com/lasgroup/SDPO).
+OPSD-GenRM implements *Training LLM Judges from Language Feedback via Position-Selective Self-Distillation*. The paper studies how to train a generative reward model (a pairwise LLM judge) from language feedback. The GRPO baseline uses the preference label to reward the final verdict; self-distillation uses the annotator's language feedback to provide token-level supervision, including at criterion choice positions. Compared with unmasked self-distillation, the position-selective variant improves out-of-distribution generalization. The paper also reports that OPSD-GenRM significantly outperforms the GRPO baseline on subjective tasks. This implementation builds on [verl](https://github.com/volcengine/verl) (`release/v0.7.1`) and [SDPO](https://github.com/lasgroup/SDPO).
 
-For each preference pair, the policy judges which of two responses is better. The same model then acts as a **teacher** on an enriched prompt that additionally contains privileged information — the annotator's rationale or a task rubric — and scores the student's own response under that prompt. The **student** (the policy on the original prompt) is trained to match the teacher's token distribution with a top-k KL loss. The teacher is an exponential moving average (EMA) of the student. Optionally, the loss is restricted to the 30% of tokens with the lowest entropy difference ΔH = H_student − H_teacher, i.e. where the teacher is most uncertain relative to the student.
+For each preference pair, OPSD-GenRM first identifies evaluation criteria (or rubric) that matter for the given user prompt, then compares the two responses along those criteria and outputs a final A/B verdict.
 
 ---
 
@@ -14,14 +14,15 @@ The trained models are available at [huggingface.co/opsd-genrm/models](https://h
 
 ## Installation
 
+Follow [verl's v0.7.1 installation guide](https://github.com/verl-project/verl/blob/release/v0.7.1/docs/start/install.rst) to select and run a Docker image compatible with your GPU. These recipes use FSDP for training and vLLM for rollouts, so choose an image with vLLM support. Inside that environment, install this repository:
+
 ```bash
 git clone https://github.com/IlgeeHong/OPSD-GenRM.git
 cd OPSD-GenRM
-pip install -r requirements.txt -r requirements-cuda.txt
-pip install -e .
+pip install --no-deps -e .
 ```
 
-`vllm`, `flash-attn`, and `triton` are required; the fused top-k kernel needs `triton >= 2.3`.
+The environment needs `vllm`, `flash-attn`, and `triton`; the fused top-k kernel requires `triton >= 2.3`.
 
 ### Credentials
 
@@ -42,7 +43,7 @@ cp opsd_genrm_recipes/credentials.env.example opsd_genrm_recipes/credentials.env
 | Evaluation | [RM-Bench](https://huggingface.co/datasets/THU-KEG/RM-Bench) | `data/preprocess_rmbench.py` |
 | Evaluation | [RewardBench 2](https://huggingface.co/datasets/allenai/reward-bench-2) | `data/preprocess_rewardbench2.py` |
 
-The launchers run these scripts automatically. `--feedback_mode` selects the teacher's privileged information: `reasoning` (annotator rationale) or `rubric`. `--prompt_template` selects the judge instruction: `pair_rm` for the rationale runs and the baseline, `pair_rm_rubric` (the judge first derives a rubric) for the rubric runs. The teacher prompt uses the same instruction as the student, so the two differ only by the feedback. Each template's data is written to `datasets/<template>/`.
+The launchers run these scripts automatically. `--feedback_mode` selects the teacher's privileged information: `reasoning` (annotator rationale) or `rubric`. `--prompt_template` selects the judge instruction: `pair_rm` asks for task-specific quality dimensions before comparison; `pair_rm_rubric` asks for a ranked task-specific rubric before comparison. The teacher prompt uses the same instruction as the student, so the two differ only by the feedback. Each template's data is written to `datasets/<template>/`.
 
 ---
 
@@ -53,10 +54,10 @@ Each launcher preprocesses the data (into `datasets/`), trains, and converts eve
 | Launcher | Method | Teacher feedback | Token mask |
 |---|---|---|---|
 | `run_drgrpo.sh` | Dr. GRPO baseline | — | — |
-| `run_rationale_sd.sh` | OPSD | annotator rationale | none |
-| `run_rationale_sd_mask70.sh` | OPSD | annotator rationale | `entropy_diff_mask`, bottom 30% of ΔH |
-| `run_rubric_sd.sh` | OPSD | task rubric | none |
-| `run_rubric_sd_mask70.sh` | OPSD | task rubric | `entropy_diff_mask`, bottom 30% of ΔH |
+| `run_rationale_sd.sh` | Self-distillation | annotator rationale | none |
+| `run_rationale_sd_mask70.sh` | Position-selective self-distillation | annotator rationale | `entropy_diff_mask`, bottom 30% of ΔH |
+| `run_rubric_sd.sh` | Self-distillation | task rubric | none |
+| `run_rubric_sd_mask70.sh` | Position-selective self-distillation | task rubric | `entropy_diff_mask`, bottom 30% of ΔH |
 
 **Qwen3-4B** (`opsd_genrm_recipes/qwen3_4B/`, 1 node x 8 GPUs):
 
@@ -77,6 +78,23 @@ Pass `--dry-run` to print the training command without running it. Other options
 ## Code overview
 
 All self-distillation code paths are gated behind `actor_rollout_ref.actor.self_distillation.enable=true`; with it disabled, the trainer behaves like verl v0.7.1. Only the FSDP backend is supported.
+
+### Self-distillation configuration
+
+The settings below are under `actor_rollout_ref.actor.self_distillation` unless a full path is shown. The launchers set the paper's choices explicitly; other defaults are in `verl/trainer/config/actor/actor.yaml`.
+
+| Setting | Meaning in these recipes |
+|---|---|
+| `enable=true`, `actor_rollout_ref.actor.policy_loss.loss_mode=full_logit_kl` | Build a feedback-conditioned teacher and train with the token-distribution KL loss. |
+| `prompt_template` | Select the pairwise judge instruction shared by student and teacher: `pair_rm` for rationale runs, `pair_rm_rubric` for rubric runs. |
+| `reprompt_template`, `feedback_template` | Format the teacher prompt and insert the rationale or rubric. The rationale and rubric Hydra configs supply their respective templates. |
+| `include_environment_feedback=true`, `include_solution=false`, `include_answer=false` | Give the teacher the language feedback, without adding another rollout or a reference answer. |
+| `max_reprompt_len` | Maximum token length of the teacher prompt before scoring the student's response: 4608 for rationale runs, 5120 for rubric runs. |
+| `teacher_regularization=ema`, `teacher_update_rate=0.01` | Use an EMA copy of the student as teacher and update it with rate 0.01. |
+| `distillation_topk=100`, `distillation_add_tail=true` | Compute the KL approximation over the teacher's top 100 tokens plus one bucket containing all remaining probability mass. |
+| `alpha=1` | Use reverse KL, from student to teacher, rather than forward KL. |
+| `token_mask_mode`, `token_mask_top_pct` | `none` uses all valid response tokens. `entropy_diff_mask` with `token_mask_top_pct=70` removes the 70% with the largest ΔH in each response, retaining the lowest 30%. The percentage is ignored when the mode is `none`. |
+| `is_clip=2.0` | Clip the importance ratio between the current student and the policy that generated the rollout when weighting the KL loss. |
 
 ### New modules
 
