@@ -1,6 +1,6 @@
 # OPSD-GenRM
 
-📄 **Paper:** [Training LLM Judges from Language Feedback via Position-Selective Self-Distillation](https://arxiv.org/abs/2609.38792v1)
+📄 **Paper:** [Training LLM Judges from Language Feedback via Position-Selective Self-Distillation](https://arxiv.org/abs/2609.38792)
 
 OPSD-GenRM implements *Training LLM Judges from Language Feedback via Position-Selective Self-Distillation*. The paper studies how to train a generative reward model (a pairwise LLM judge) from language feedback. The GRPO baseline uses the preference label to reward the final verdict; self-distillation uses the annotator's language feedback to provide token-level supervision, including at criterion choice positions. Compared with unmasked self-distillation, the position-selective variant improves out-of-distribution generalization. The paper also reports that OPSD-GenRM significantly outperforms the GRPO baseline on subjective tasks. This implementation builds on [verl](https://github.com/volcengine/verl) (`release/v0.7.1`) and [SDPO](https://github.com/lasgroup/SDPO).
 
